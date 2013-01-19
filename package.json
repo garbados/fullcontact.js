@@ -1,0 +1,19 @@
+{ "name" : "fullcontact.js"
+, "description" : "Simple interface for FullContact's API, using node-request."
+, "tags" : ["http", "simple", "util", "utility"]
+, "version" : "0.0.1"
+, "author" : "Max Thayer <garbados@gmail.com>"
+, "repository" :
+  { "type" : "git"
+  , "url" : "http://github.com/garbados/fullcontact.js.git"
+  }
+, "bugs" :
+  { "url" : "http://github.com/garbados/fullcontact.js/issues" }
+, "engines" : ["node >= 0.3.6"]
+, "main" : "./main"
+, "dependencies": { 
+	"request":"~2.12.0"
+}
+, "bundleDependencies": ["request"]
+, "scripts": { "test": "node tests/run.js" }
+}
