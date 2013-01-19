@@ -1,34 +1,69 @@
-var request = require('request');
+var request = require('request')
+  , url_js = require('url');
 
-function FullContact(apiKey) {
-	this.apiKey = apiKey;
-	this.urls = {
-		person: 'https://api.fullcontact.com/v2/person.json',
-		name: 'https://api.fullcontact.com/v2/name/normalizer.json',
-		location: 'https://api.fullcontact.com/v2/address/locationNormalizer.json',
-		// icon: 'https://api.fullcontact.com/v2/icon/',
-		batch: 'https://api.fullcontact.com/v2/batch.json',
-		// cardshark: 'https://api.fullcontact.com/v2/cardShark',
-		email: 'https://api.fullcontact.com/v2/email/disposable.json',
-	};
+var fc_urls = {
+	person: 'https://api.fullcontact.com/v2/person.json',
+	name: 'https://api.fullcontact.com/v2/name/normalizer.json',
+	location: 'https://api.fullcontact.com/v2/address/locationNormalizer.json',
+	email: 'https://api.fullcontact.com/v2/email/disposable.json',
+};
+
+// urls with special needs
+var complex_urls = {
+	batch: 'https://api.fullcontact.com/v2/batch.json',
+	// cardshark: 'https://api.fullcontact.com/v2/cardShark',
+	// icon: 'https://api.fullcontact.com/v2/icon/',
 }
 
-FullContact.prototype._get = function(urlKey) {
+// dynamically merge urls
+var all_urls = (function() {
+	urls = fc_urls;
+	for (var attrname in complex_urls) { 
+		urls[attrname] = complex_urls[attrname];
+	}
+	return urls;
+})();
+
+// generates functions to call FullContact generically
+var _get = function(self, urlKey) {
 	return function(options, cb) {
-		if (!hasOwnProperty(options, 'apiKey')) {
-			options.apiKey = this.apiKey;
-		}
+		console.log(self.apiKey); // TODO why is this undefined?
+		options.apiKey = options.apiKey || self.apiKey;
 		request({
-			url: this.urls[urlKey],
+			url: self.urls[urlKey],
 			qs: options
 		}, cb);	
 	}
 }
 
-FullContact.prototype.person = FullContact.prototype._get('person');
-FullContact.prototype.name = FullContact.prototype._get('name');
-FullContact.prototype.location = FullContact.prototype._get('location');
-FullContact.prototype.batch = FullContact.prototype._get('batch');
-FullContact.prototype.email = FullContact.prototype._get('email');
+// generate functions to format, but not execute, FullContact queries. Useful for batch.
+var _batch = function(self, urlKey) {
+	return function(options) {
+		return url_js.format({
+			query: options,
+			host: self.urls[urlKey]
+		});
+	}
+}
+
+// this pattern is like `def __init__`, right?
+function FullContact(apiKey) {
+	this.apiKey = apiKey;
+	this.urls = all_urls;
+
+	for(url in fc_urls) {
+		this[url] = _get(this, url);
+		this['batch_'+url] = _batch(this, url)
+	}
+
+	this.batch = function(options, cb) {
+		var apiKey = options.apiKey || this.apiKey;
+		delete options.apiKey;
+		request({
+			url: this.urls['batch'],
+			form: options
+		}, cb);
+	}
+}
 
 module.exports = FullContact;
