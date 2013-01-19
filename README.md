@@ -1,4 +1,4 @@
-# FullContact.py
+# FullContact.js
 
 An effortless interface for [FullContact](http://www.fullcontact.com/), using node-request.
 
