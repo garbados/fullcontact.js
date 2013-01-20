@@ -1,13 +1,18 @@
-var apiKey = process.argv[2]
+var api_key = process.argv[2]
   , FullContact = require('../main.js')
   , assert = require('assert');
 
-var fc = new FullContact(apiKey)
-  , bad_fc = new FullContact('this is a bad api key');
+var fc = new FullContact(api_key);
 
 function generate_assertion(statusCode) {
 	return function(error, response, body) {
-		assert.equal(response.statusCode, statusCode);
+		try {
+			assert.equal(response.statusCode, statusCode);			
+		} catch(e) {
+			console.log(response.request);
+			throw e;
+		}
+
 	}
 }
 
@@ -27,38 +32,40 @@ var test_params = {
 	email: {email: 'joe+tag@sharklasers.com'},
 };
 
-test_params['batch'] = (function() {
-	requests = [];
-	for(key in test_params){
-		requests.push(fc['batch_'+key](test_params[key]));
-	}
-	return {requests: requests};
-})();
+// test_params['batch'] = (function() {
+// 	requests = [];
+// 	for(key in test_params){
+// 		requests.push(fc['batch_'+key](test_params[key]));
+// 	}
+// 	return {requests: requests};
+// })();
 
 var tests = {
 	forbidden: function() {
 		for(key in test_params) {
-			bad_fc[key](test_params[key], test_callbacks['Forbidden'])
+			var bad_params = {apiKey: 'herp derp'};
+			for (var attrname in test_params[key]) { 
+				bad_params[attrname] = test_params[key][attrname];
+			}
+			fc[key](bad_params, 
+				test_callbacks['Forbidden'])
 		}
 	},
 	invalid: function() {
 		for(key in test_params) {
-			fc[key]({}, test_callbacks['Invalid'])
+			fc[key]({}, 
+				test_callbacks['Invalid'])
 		}
 	},
 	goodrequest: function() {
 		for(key in test_params) {
-			fc[key](test_params[key], test_callbacks['OK'])
+			fc[key](test_params[key], 
+				test_callbacks['OK'])
 		}
 	},
 }
 
 // run the dang things!
 for(key in tests) {
-	try {
-		tests[key]();
-	} catch (e) {
-		console.log("Error in "+key);
-		console.log(e);
-	}
+	tests[key]();
 }

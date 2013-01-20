@@ -17,53 +17,59 @@ var complex_urls = {
 
 // dynamically merge urls
 var all_urls = (function() {
-	urls = fc_urls;
+	var urls = {};
 	for (var attrname in complex_urls) { 
 		urls[attrname] = complex_urls[attrname];
+	}
+	for (var attrname in fc_urls) {
+		urls[attrname] = fc_urls[attrname];
 	}
 	return urls;
 })();
 
+// this pattern is like `def __init__`, right?
+function FullContact(apiKey) {
+	this.apiKey = apiKey;
+
+	for(url in fc_urls) {
+		this[url] = this._get(url);
+		this['batch_'+url] = this._batch(url);
+	}
+}
+
+FullContact.prototype.urls = all_urls;
+
 // generates functions to call FullContact generically
-var _get = function(self, urlKey) {
+FullContact.prototype._get = function(urlKey) {
 	return function(options, cb) {
-		console.log(self.apiKey); // TODO why is this undefined?
-		options.apiKey = options.apiKey || self.apiKey;
+		options.apiKey = options.apiKey || this.apiKey;
 		request({
-			url: self.urls[urlKey],
+			url: this.urls[urlKey],
 			qs: options
 		}, cb);	
 	}
 }
 
 // generate functions to format, but not execute, FullContact queries. Useful for batch.
-var _batch = function(self, urlKey) {
+FullContact.prototype._batch = function(urlKey) {
 	return function(options) {
 		return url_js.format({
 			query: options,
-			host: self.urls[urlKey]
+			host: this.urls[urlKey]
 		});
 	}
 }
 
-// this pattern is like `def __init__`, right?
-function FullContact(apiKey) {
-	this.apiKey = apiKey;
-	this.urls = all_urls;
+// special method: batch
+// FullContact.prototype.batch = function(options, cb) {
+// 	var apiKey = options.apiKey || this.apiKey;
+// 	delete options.apiKey;
+// 	request.post({
+// 		url: this.urls['batch'],
+// 		qs: {apiKey: apiKey},
+// 		json: options
+// 	}, cb);
+// }
 
-	for(url in fc_urls) {
-		this[url] = _get(this, url);
-		this['batch_'+url] = _batch(this, url)
-	}
-
-	this.batch = function(options, cb) {
-		var apiKey = options.apiKey || this.apiKey;
-		delete options.apiKey;
-		request({
-			url: this.urls['batch'],
-			form: options
-		}, cb);
-	}
-}
 
 module.exports = FullContact;
