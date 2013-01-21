@@ -39,6 +39,12 @@ function FullContact(apiKey) {
 
 FullContact.prototype.urls = all_urls;
 
+FullContact.prototype.get_body = function(callback) {
+	return function(error, response, body) {
+		callback(JSON.parse(body));
+	}
+}
+
 // generates functions to call FullContact generically
 FullContact.prototype._get = function(urlKey) {
 	return function(options, cb) {
@@ -46,7 +52,7 @@ FullContact.prototype._get = function(urlKey) {
 		request({
 			url: this.urls[urlKey],
 			qs: options
-		}, cb);	
+		}, this.get_body(cb));
 	}
 }
 

@@ -1,7 +1,7 @@
 { "name" : "fullcontact.js"
 , "description" : "Simple interface for FullContact's API, using node-request."
 , "tags" : ["http", "simple", "util", "utility"]
-, "version" : "0.0.1"
+, "version" : "0.1.0"
 , "author" : "Max Thayer <garbados@gmail.com>"
 , "repository" :
   { "type" : "git"

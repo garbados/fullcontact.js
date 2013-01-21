@@ -5,9 +5,9 @@ var api_key = process.argv[2]
 var fc = new FullContact(api_key);
 
 function generate_assertion(statusCode) {
-	return function(error, response, body) {
+	return function(response) {
 		try {
-			assert.equal(response.statusCode, statusCode);			
+			assert.equal(response.status, statusCode);
 		} catch(e) {
 			console.log(response.request);
 			throw e;
