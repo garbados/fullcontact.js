@@ -71,5 +71,4 @@ FullContact.prototype._batch = function(urlKey) {
 // 	}, cb);
 // }
 
-
 module.exports = FullContact;
