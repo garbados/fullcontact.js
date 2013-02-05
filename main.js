@@ -47,13 +47,21 @@ FullContact.prototype.get_body = function(callback) {
 
 // generates functions to call FullContact generically
 FullContact.prototype._get = function(urlKey) {
-	return function(options, cb) {
-		options.apiKey = options.apiKey || this.apiKey;
+	_self = this;
+	var getfunc = function(options, cb) {
+		options.apiKey = options.apiKey || _self.apiKey;
 		request({
-			url: this.urls[urlKey],
+			url: _self.urls[urlKey],
 			qs: options
-		}, this.get_body(cb));
+		}, function(e,r,b){
+			if(b && (JSON.parse(b).status === 202)){
+				setTimeout(getfunc, 300000, options, cb);
+			}else{
+				_self.get_body(cb)(e,r,b);
+			}
+		});
 	}
+	return getfunc;
 }
 
 // generate functions to format, but not execute, FullContact queries. Useful for batch.
